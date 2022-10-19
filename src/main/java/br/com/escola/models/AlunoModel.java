@@ -8,6 +8,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +27,7 @@ public class AlunoModel {
 	@Column(nullable = false, unique = true)
 	private String username;
 	
+	@JsonIgnore
 	@Column(nullable = false)
 	private String password;
 	

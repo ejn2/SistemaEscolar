@@ -12,7 +12,14 @@ public class EscolaApplication {
 	
 	
 	//** FAZER  **//
-	
-	//Fazer todos os testes e upar uma DEMO para o github
+
+	//Validar dados de entrada.
+	//Definir tamanho dos campos das tabelas.
+	//Implementar login jwt.
+	//Criar o model do manager.
+	//Login de professor, aluno e manager
+	//Tratar exceções.
+	//Refatorar código.
+	//mais...
 	
 }

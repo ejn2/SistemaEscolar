@@ -1,6 +1,7 @@
 package br.com.escola.services;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -12,6 +13,7 @@ import br.com.escola.exceptions.AlreadyRegisteredException;
 import br.com.escola.exceptions.NotFoundException;
 import br.com.escola.exceptions.TurmaException;
 import br.com.escola.models.AlunoModel;
+import br.com.escola.models.TurmaModel;
 import br.com.escola.repository.AlunoRepository;
 import br.com.escola.repository.TurmaRepository;
 
@@ -26,6 +28,9 @@ public class AlunoService {
 	
 	private ModelMapper mapper = new ModelMapper();
 	
+	
+	//========================= [ List ] =========================//
+	
 	public List<AlunoDTO> list() {
 		
 		return this.alunoRepo.findAll()
@@ -36,16 +41,63 @@ public class AlunoService {
 	}
 	
 	
-	public AlunoDTO save(AlunoModel alunoModel) throws AlreadyRegisteredException, NotFoundException, TurmaException {
-		this.checkIfAlunoAlreadyExists(alunoModel.getUsername());
-		this.checkifTurmaExists(alunoModel.getTurma().getId());
-		this.checkTurmaAlunoLimit(alunoModel.getTurma().getId());
+	//========================= [ Find by id ] =========================//
+	
+	
+	public AlunoModel findById(Long alunoId) throws NotFoundException {
+		Optional<AlunoModel> aluno = this.alunoRepo.findById(alunoId);
 		
-		AlunoModel savedAluno = this.alunoRepo.save(alunoModel);
+		aluno.orElseThrow(() -> new NotFoundException("Aluno não encontrado."));
 		
-		return this.mapper.map(savedAluno, AlunoDTO.class);
-
+		return aluno.get();
+		
 	}
+	
+	
+	//========================= [ Save ] =========================//
+	
+	public AlunoModel save(AlunoDTO alunoDTO) throws AlreadyRegisteredException, NotFoundException, TurmaException {
+		this.checkIfAlunoAlreadyExists(alunoDTO.getUsername());
+		this.checkifTurmaExists(alunoDTO.getTurma().getId());
+		this.checkTurmaAlunoLimit(alunoDTO.getTurma().getId());
+		
+		return this.alunoRepo.save(
+				this.mapper.map(alunoDTO, AlunoModel.class)
+			);
+ 
+	}
+	
+	
+	//========================= [ Update ] =========================//
+	
+	public AlunoModel update(Long alunoId, AlunoDTO alunoDTO) throws NotFoundException, AlreadyRegisteredException {
+		
+		AlunoModel foundAluno = this.findById(alunoId);
+		
+		Optional<TurmaModel> foundTurma = this.turmaRepo.findById(alunoDTO.getTurma().getId());
+		foundTurma.orElseThrow(() -> new NotFoundException("Turma não registrada."));
+		
+		if(!foundAluno.getUsername().toLowerCase().equals(alunoDTO.getUsername())) {
+			this.checkIfAlunoAlreadyExists(alunoDTO.getUsername());
+		}
+		
+		alunoDTO.setId(alunoId);
+		alunoDTO.setTurma(foundTurma.get());
+		
+		return this.alunoRepo.save(
+			this.mapper.map(alunoDTO, AlunoModel.class)
+				);
+	}
+	
+	
+	//========================= [ Delete ] =========================//
+	
+	public void delete(Long alunoId) throws NotFoundException {
+		this.findById(alunoId);
+		this.alunoRepo.deleteById(alunoId);
+		
+	}
+	
 	
 	private void checkTurmaAlunoLimit(Long turmaId) throws TurmaException {
 		if(this.turmaRepo.findById(turmaId).get().getAlunos().size() >= 30) {

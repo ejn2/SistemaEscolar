@@ -1,7 +1,11 @@
 package br.com.escola.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
@@ -12,8 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
 
 import br.com.escola.dto.AlunoDTO;
 import br.com.escola.exceptions.AlreadyRegisteredException;
@@ -36,6 +40,9 @@ public class AlunoServiceTest {
 	
 	@InjectMocks
 	private AlunoService alunoService;
+	
+	
+	private ModelMapper mapper = new ModelMapper();
 	
 	
 	//====================[ Models ]====================//
@@ -63,6 +70,22 @@ public class AlunoServiceTest {
 	}
 	
 	
+	
+	//========================= [ Find by id - Test ] =========================//
+	
+	@Test
+	void whenTheMethodFindByIdIsCalled_ThenAnAlunoIsReturned() throws NotFoundException {
+		when(this.alunoRepo.findById(anyLong()))
+			.thenReturn(Optional.of(this.aluno));
+			
+		AlunoModel foundAluno = this.alunoService.findById(1L);
+		
+		assertEquals(this.aluno,  foundAluno);
+		
+	}
+	
+	
+	
 	//====================[ Save - Test ]====================//
 	
 	@Test
@@ -71,12 +94,53 @@ public class AlunoServiceTest {
 		when(this.turmaRepo.findById(anyLong()))
 			.thenReturn(Optional.of(this.turma));
 		
-		when(this.alunoRepo.save(Mockito.any(AlunoModel.class)))
+		when(this.alunoRepo.save(any(AlunoModel.class)))
 			.thenReturn(this.aluno);
 		
-		AlunoDTO savedAluno = this.alunoService.save(this.aluno);
-		
+		AlunoModel savedAluno = this.alunoService.save(
+				this.mapper.map(this.aluno, AlunoDTO.class)
+			);
+	
 		assertEquals(this.aluno.getUsername(), savedAluno.getUsername());
+		
+	}
+	
+	
+	
+	//====================[ Update - Test ]====================//
+	
+	@Test
+	void whenTheMethodUPDATEIsCalled_ThenAnAlunoIsUpdated() throws NotFoundException, AlreadyRegisteredException {
+		when(this.alunoRepo.findById(anyLong()))
+			.thenReturn(Optional.of(this.aluno));
+		
+		when(this.turmaRepo.findById(anyLong()))
+			.thenReturn(Optional.of(this.turma));
+		
+		when(this.alunoRepo.save(any(AlunoModel.class)))
+			.thenReturn(this.aluno);
+		
+		AlunoModel alunoUpdated = this.alunoService.update(1L, this.mapper.map(this.aluno, AlunoDTO.class));
+		
+		assertEquals(this.aluno, alunoUpdated);
+		
+		
+	}
+	
+	
+	
+	//====================[ Delete - Test ]====================//
+	
+	@Test
+	void whenTheMethodDELETEIsCalled_ThenAnAlunoIsDeleted() throws NotFoundException {
+		when(this.alunoRepo.findById(anyLong()))
+			.thenReturn(Optional.of(this.aluno));
+		
+		doNothing().when(this.alunoRepo).deleteById(anyLong());
+		
+		this.alunoService.delete(1L);
+		
+		verify(this.alunoRepo, times(1)).deleteById(anyLong());
 		
 	}
 	

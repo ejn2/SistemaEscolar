@@ -8,6 +8,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,6 +24,8 @@ public class ProfessorModel {
 	
 	@Column(nullable = false, unique = true)
 	private String username;
+	
+	@JsonIgnore
 	private String password;
 	
 	@ManyToOne(cascade = CascadeType.MERGE)
